@@ -1,0 +1,35 @@
+name: Release
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+
+  Release:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Release dism docker images
+        run: |
+          docker buildx build \
+            --progress plain \
+            --platform linux/amd64,linux/arm64 \
+            --pull \
+            --push \
+            --tag ${{ secrets.DOCKER_USERNAME }}/dism-base:latest \
+            --file Dockerfile \
+            .
